@@ -25,6 +25,7 @@ setup(name='mtj.flask.acl',
       install_requires=[
           'setuptools',
           # -*- Extra requirements: -*-
+          'passlib',
       ],
       entry_points="""
       # -*- Entry points: -*-
