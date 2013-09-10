@@ -3,6 +3,9 @@ from __future__ import absolute_import
 from flask import Blueprint, Flask, request, g, make_response, render_template
 from flask import abort, flash, url_for, current_app, session, redirect
 
+from flask.ext.principal import Permission, RoleNeed
+from flask.ext.principal import Identity, AnonymousIdentity, identity_changed
+
 from mtj.flask.acl.base import anonymous
 from mtj.flask.acl.exc import SiteAclMissingError
 from mtj.flask.acl.flask import *
@@ -22,8 +25,9 @@ def login():
     user = acl_back.authenticate(login, password)
 
     if user:
-        session['mtj.user'] = user
         flash('Welcome %s' % user['login'])
+        identity_changed.send(current_app._get_current_object(),
+            identity=Identity(user))
         script_root = getattr(request, 'script_root', '')
         return redirect(script_root + request.form.get('next', ''))
     else:
@@ -35,8 +39,8 @@ def login():
 
 def logout():
     if getCurrentUser() not in (None, anonymous):
-        session.pop('logged_in', None)
-        session.pop('mtj.user', None)
+        identity_changed.send(current_app._get_current_object(),
+            identity=AnonymousIdentity())
         # cripes bad way to display a message while ensuring the nav
         # elements for logged in users are not displayed.
         return redirect(url_for('.logout'))
@@ -48,7 +52,12 @@ def current():
         role_names=getCurrentUserRoles())
     return result
 
-@require_role('manager', 'admin')
+
+manager_or_admin = permission_from_roles('manager', 'admin')
+admin = permission_from_roles('admin')
+change_password = permission_from_roles('admin', 'self_passwd')
+
+@manager_or_admin.require()
 def user_list():
     acl_back = current_app.config.get('MTJ_ACL')
     users = acl_back.listUsers()
@@ -56,7 +65,7 @@ def user_list():
     response = make_response(result)
     return response
 
-@require_role('manager', 'admin')
+@manager_or_admin.require()
 def user_add():
     acl_back = current_app.config.get('MTJ_ACL')
 
@@ -75,7 +84,7 @@ def user_add():
     response = make_response(result)
     return response
 
-@require_role('manager', 'admin')
+@manager_or_admin.require()
 def user_edit(user_login):
     acl_back = current_app.config.get('MTJ_ACL')
 
@@ -128,12 +137,12 @@ def change_password_form(user, admin_mode=False):
     response = make_response(result)
     return response
 
-@require_role('self_passwd', 'admin')
+@change_password.require()
 def passwd():
     user = getCurrentUser()
     return change_password_form(user)
 
-@require_role('admin')
+@admin.require()
 def passwd_admin(user_login):
     acl_back = current_app.config.get('MTJ_ACL')
     user = acl_back.getUser(user_login)
@@ -144,7 +153,7 @@ def passwd_admin(user_login):
 
 # Group Management
 
-@require_role('manager', 'admin')
+@manager_or_admin.require()
 def group_list():
     acl_back = current_app.config.get('MTJ_ACL')
     groups = acl_back.listGroups()
@@ -152,7 +161,7 @@ def group_list():
     response = make_response(result)
     return response
 
-@require_role('manager', 'admin')
+@manager_or_admin.require()
 def group_user(user_login):
     acl_back = current_app.config.get('MTJ_ACL')
     error_msg = None
@@ -175,7 +184,7 @@ def group_user(user_login):
     response = make_response(result)
     return response
 
-@require_role('manager', 'admin')
+@manager_or_admin.require()
 def group_add():
     acl_back = current_app.config.get('MTJ_ACL')
     error_msg = None
@@ -197,7 +206,7 @@ def group_add():
     response = make_response(result)
     return response
 
-@require_role('manager', 'admin')
+@manager_or_admin.require()
 def group_edit(group_name):
     acl_back = current_app.config.get('MTJ_ACL')
 

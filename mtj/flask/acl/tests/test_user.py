@@ -3,6 +3,7 @@ import unittest
 import tempfile
 
 from flask import Flask, session
+from flask.ext.principal import PermissionDenied
 from werkzeug.exceptions import Forbidden
 
 from mtj.flask.acl.base import SetupAcl
@@ -15,10 +16,12 @@ from mtj.flask.acl import user
 class UserTestCase(unittest.TestCase):
 
     def setUp(self):
+        self.auth = SetupAcl('user', 'password')
+
         app = Flask('mtj.flask.acl')
-        app.config['MTJ_ACL'] = self.auth = SetupAcl('user', 'password')
         app.config['SECRET_KEY'] = 'test_secret_key'
-        app.config['MTJ_LOGGED_IN'] = 'test_logged_in_token'
+        auth = self.auth(app)
+
         app.register_blueprint(user.acl_front, url_prefix='/acl')
 
         app.config['TESTING'] = True
@@ -29,6 +32,7 @@ class UserTestCase(unittest.TestCase):
 
     def test_core(self):
         # ensure the admin role is correctly added.
+        self.assertEqual(self.app.config['MTJ_ACL'], self.auth)
         self.assertTrue('admin' in flask._roles)
 
     def test_login_form(self):
@@ -71,31 +75,12 @@ class UserTestCase(unittest.TestCase):
             self.assertEqual(rv.status_code, 200)
             self.assertTrue('Invalid credentials' in rv.data)
 
-    def test_user(self):
-        # simple test
-        with self.app.test_request_context('/'):
-            self.assertEqual(user.getCurrentUser(), anonymous)
-
-            # if access token is correctly set.
-            session['mtj.user'] = self.auth.generateAccessToken('admin')
-            self.assertEqual(user.getCurrentUser().login, 'admin')
-
-    def test_group(self):
-        # simple test
-        with self.app.test_request_context('/'):
-            session['mtj.user'] = self.auth.generateAccessToken('admin')
-            self.assertTrue(user.verifyUserGroupByName('admin'))
-            self.assertRaises(Forbidden,
-                user.verifyUserGroupByName, 'fakegroup')
-
-            session['mtj.user'] = self.auth.generateAccessToken('user')
-            self.assertRaises(Forbidden,
-                user.verifyUserGroupByName, 'admin')
-
     def test_list_user(self):
         with self.app.test_client() as c:
-            rv = c.get('/acl/list')
-            self.assertFalse('<td>admin</td>' in rv.data)
+            # rv = c.get('/acl/list')
+            # self.assertFalse('<td>admin</td>' in rv.data)
+
+            self.assertRaises(PermissionDenied, c.get, '/acl/list')
 
             rv = c.post('/acl/login',
                 data={'login': 'admin', 'password': 'password'})

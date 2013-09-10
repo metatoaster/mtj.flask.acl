@@ -1,7 +1,7 @@
 from unittest import TestCase, TestSuite, makeSuite
 
 from flask import Flask, session
-from werkzeug.exceptions import Forbidden
+from flask.ext.principal import PermissionDenied
 
 from mtj.flask.acl import sql
 from mtj.flask.acl import flask
@@ -201,11 +201,12 @@ class AclTestCase(TestCase):
 class UserSqlAclIntegrationTestCase(TestCase):
 
     def setUp(self):
+        self.auth = sql.SqlAcl(setup_login='admin', setup_password='password')
+
         app = Flask('mtj.flask.acl')
-        app.config['MTJ_ACL'] = self.auth = sql.SqlAcl(
-            setup_login='admin', setup_password='password')
+        auth = self.auth(app)
+
         app.config['SECRET_KEY'] = 'test_secret_key'
-        app.config['MTJ_LOGGED_IN'] = 'test_logged_in_token'
         app.register_blueprint(user.acl_front, url_prefix='/acl')
 
         app.config['TESTING'] = True
@@ -327,8 +328,10 @@ class UserSqlAclIntegrationTestCase(TestCase):
             rv = c.post('/acl/login',
                 data={'login': 'test_user', 'password': 'password'})
 
-            rv = c.get('/acl/passwd')
-            self.assertEqual(rv.status_code, 403)
+            # rv = c.get('/acl/passwd')
+            # self.assertEqual(rv.status_code, 403)
+
+            self.assertRaises(PermissionDenied, c.get, '/acl/passwd')
 
     def test_user_group(self):
         auth = self.auth
