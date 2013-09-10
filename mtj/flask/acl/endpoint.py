@@ -45,10 +45,10 @@ def logout():
 
 def current():
     result = render_template('user.jinja', user=getCurrentUser(),
-        permit_names=getCurrentUserPermits())
+        role_names=getCurrentUserRoles())
     return result
 
-@require_permit('manager', 'admin')
+@require_role('manager', 'admin')
 def user_list():
     acl_back = current_app.config.get('MTJ_ACL')
     users = acl_back.listUsers()
@@ -56,7 +56,7 @@ def user_list():
     response = make_response(result)
     return response
 
-@require_permit('manager', 'admin')
+@require_role('manager', 'admin')
 def user_add():
     acl_back = current_app.config.get('MTJ_ACL')
 
@@ -75,7 +75,7 @@ def user_add():
     response = make_response(result)
     return response
 
-@require_permit('manager', 'admin')
+@require_role('manager', 'admin')
 def user_edit(user_login):
     acl_back = current_app.config.get('MTJ_ACL')
 
@@ -128,12 +128,12 @@ def change_password_form(user, admin_mode=False):
     response = make_response(result)
     return response
 
-@require_permit('self_passwd', 'admin')
+@require_role('self_passwd', 'admin')
 def passwd():
     user = getCurrentUser()
     return change_password_form(user)
 
-@require_permit('admin')
+@require_role('admin')
 def passwd_admin(user_login):
     acl_back = current_app.config.get('MTJ_ACL')
     user = acl_back.getUser(user_login)
@@ -144,7 +144,7 @@ def passwd_admin(user_login):
 
 # Group Management
 
-@require_permit('manager', 'admin')
+@require_role('manager', 'admin')
 def group_list():
     acl_back = current_app.config.get('MTJ_ACL')
     groups = acl_back.listGroups()
@@ -152,7 +152,7 @@ def group_list():
     response = make_response(result)
     return response
 
-@require_permit('manager', 'admin')
+@require_role('manager', 'admin')
 def group_user(user_login):
     acl_back = current_app.config.get('MTJ_ACL')
     error_msg = None
@@ -175,7 +175,7 @@ def group_user(user_login):
     response = make_response(result)
     return response
 
-@require_permit('manager', 'admin')
+@require_role('manager', 'admin')
 def group_add():
     acl_back = current_app.config.get('MTJ_ACL')
     error_msg = None
@@ -197,7 +197,7 @@ def group_add():
     response = make_response(result)
     return response
 
-@require_permit('manager', 'admin')
+@require_role('manager', 'admin')
 def group_edit(group_name):
     acl_back = current_app.config.get('MTJ_ACL')
 
@@ -208,14 +208,14 @@ def group_edit(group_name):
     if request.method == 'POST':
         description = request.form.get('description')
         acl_back.editGroup(group_name, description)
-        acl_back.setGroupPermits(group, request.form.getlist('permit'))
+        acl_back.setGroupRoles(group, request.form.getlist('role'))
         flash('Group updated')
         return redirect(url_for('.group_edit', group_name=group_name))
 
-    group_permits = acl_back.getGroupPermits(group)
-    permits = getPermits()
+    group_roles = acl_back.getGroupRoles(group)
+    roles = getRoles()
 
     result = render_template('group_edit.jinja',
-        group=group, permits=permits, group_permits=group_permits)
+        group=group, roles=roles, group_roles=group_roles)
     response = make_response(result)
     return response

@@ -8,8 +8,8 @@ from .base import anonymous
 
 # Flask helpers.
 
-_permits = set()
-_blueprint_permits = {}
+_roles = set()
+_blueprint_roles = {}
 
 def getCurrentUser():
     access_token = session.get('mtj.user', {})
@@ -23,73 +23,73 @@ def getCurrentUserGroupNames():
     acl_back = current_app.config.get('MTJ_ACL')
     return [gp.name for gp in acl_back.getUserGroups(user)]
 
-def getCurrentUserPermits():
+def getCurrentUserRoles():
     user = getCurrentUser()
     acl_back = current_app.config.get('MTJ_ACL')
     if acl_back is None:
         return []
-    return acl_back.getUserPermits(user)
+    return acl_back.getUserRoles(user)
 
-def getPermits():
-    return sorted(list(_permits))
+def getRoles():
+    return sorted(list(_roles))
 
-def registerPermit(permit_name):
-    _permits.add(permit_name)
+def registerRole(role_name):
+    _roles.add(role_name)
 
-def registerBlueprintPermit(blueprint, permit_name):
+def registerBlueprintRole(blueprint, role_name):
     # XXX blueprint needs to resolve to a name, but for now treat this
     # as a string.
 
-    # one blueprint = one permit for now.
+    # one blueprint = one role for now.
     if hasattr(blueprint, 'name'):  # blueprints have name
         blueprint = blueprint.name
-    _blueprint_permits[blueprint] = permit_name
-    registerPermit(permit_name)  # so it will be listed in getPermits
+    _blueprint_roles[blueprint] = role_name
+    registerRole(role_name)  # so it will be listed in getRoles
 
-def getBlueprintPermit(blueprint):
-    return _blueprint_permits.get(blueprint, None)
+def getBlueprintRole(blueprint):
+    return _blueprint_roles.get(blueprint, None)
 
 def verifyUserGroupByName(group):
     if not group in getCurrentUserGroupNames():
         abort(403)
     return True
 
-def verifyUserPermit(*permits):
+def verifyUserRole(*roles):
     acl_back = current_app.config.get('MTJ_ACL')
-    for permit in permits:
-        if permit in getCurrentUserPermits():
+    for role in roles:
+        if role in getCurrentUserRoles():
             return True
     if not current_app.config.get('MTJ_IGNORE_PERMIT'):
         abort(403)
 
-def verifyBlueprintPermit():
-    blueprint_permit = getBlueprintPermit(request.blueprint)
-    if blueprint_permit:
-        verifyUserPermit(blueprint_permit)
+def verifyBlueprintRole():
+    blueprint_role = getBlueprintRole(request.blueprint)
+    if blueprint_role:
+        verifyUserRole(blueprint_role)
 
-def require_permit(*permit_names):
+def require_role(*role_names):
     """
-    A decorator for specifying the required permit to access the view
+    A decorator for specifying the required role to access the view
     this is decorated against.
 
-    Permits are statically defined, and need to be hooked into groups
+    Roles are statically defined, and need to be hooked into groups
     which then can be freely customized and assigned with the rights to
     be granted.
     """
 
-    # Add the permit into some global list for ease of assignment.
+    # Add the role into some global list for ease of assignment.
     # Ideally this should be within the app the function will ultimately
     # be accessed from, but that is impossible to determine so just
-    # store the permit name into a global list available from within
+    # store the role name into a global list available from within
     # this module.
 
-    for permit_name in permit_names:
-        registerPermit(permit_name)
+    for role_name in role_names:
+        registerRole(role_name)
 
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*a, **kw):
-            verifyUserPermit(*permit_names)
+            verifyUserRole(*role_names)
             return f(*a, **kw)
         return wrapper
     return decorator

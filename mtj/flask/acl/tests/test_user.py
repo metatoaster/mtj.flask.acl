@@ -28,8 +28,8 @@ class UserTestCase(unittest.TestCase):
         pass
 
     def test_core(self):
-        # ensure the admin permit is correctly added.
-        self.assertTrue('admin' in flask._permits)
+        # ensure the admin role is correctly added.
+        self.assertTrue('admin' in flask._roles)
 
     def test_login_form(self):
         with self.app.test_client() as c:

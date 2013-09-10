@@ -27,14 +27,14 @@
 
     <div class="control-group">
       <label class="control-label"
-          for="permit_assignment">Permit Assignment</label>
+          for="role_assignment">Role Assignment</label>
       <div class="controls">
 
-      {% for permit in permits %}
+      {% for role in roles %}
         <label class="checkbox">
-          <input type="checkbox" name="permit" value="{{ permit }}"{{
-              permit in group_permits and ' checked="checked"' or '' }}>
-            <span>{{ permit }}</span>
+          <input type="checkbox" name="role" value="{{ role }}"{{
+              role in group_roles and ' checked="checked"' or '' }}>
+            <span>{{ role }}</span>
         </label>
       {% endfor %}
 

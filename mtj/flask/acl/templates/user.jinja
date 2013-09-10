@@ -2,11 +2,11 @@
 <p>Hello, {{ user.login|escape }}.</p>
 
 <dl>
-{% if 'self_passwd' in permit_names or 'admin' in permit_names %}
+{% if 'self_passwd' in role_names or 'admin' in role_names %}
   <dt><a href="passwd">Change your password</a></dt>
   <dd>You may change your password using this form</dd>
 {% endif %}
-{% if 'admin' in permit_names %}
+{% if 'admin' in role_names %}
   <dt><a href="add">Add new user</a></dt>
   <dd>Add a new user to this site.</dd>
 
@@ -15,7 +15,7 @@
 {% endif %}
 </dl>
 
-{% if 'admin' in permit_names %}
+{% if 'admin' in role_names %}
 <h4>Group Management</h4>
 <dl>
   <dt><a href="group/list">List groups</a></dt>

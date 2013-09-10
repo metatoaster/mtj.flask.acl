@@ -63,17 +63,17 @@ class UserGroup(Base):
         self.group = group
 
 
-class GroupPermit(Base):
+class GroupRole(Base):
 
-    __tablename__ = 'group_permit'
+    __tablename__ = 'group_role'
 
     id = Column(Integer, primary_key=True)
     group = Column(String(255), index=True)
-    permit = Column(String(255), index=True)
+    role = Column(String(255), index=True)
 
-    def __init__(self, group, permit):
+    def __init__(self, group, role):
         self.group = group
-        self.permit = permit
+        self.role = role
 
 
 class SqlAcl(BaseAcl):
@@ -120,9 +120,9 @@ class SqlAcl(BaseAcl):
 
         self.setUserGroups(user, ('admin',))
 
-        permits = self.getGroupPermits(admin_grp)
-        permits.add('admin')
-        self.setGroupPermits(admin_grp, permits)
+        roles = self.getGroupRoles(admin_grp)
+        roles.add('admin')
+        self.setGroupRoles(admin_grp, roles)
 
     def session(self):
         return self._sessions()
@@ -250,30 +250,30 @@ class SqlAcl(BaseAcl):
         session.commit()
         return True
 
-    # permits
+    # roles
 
-    def setGroupPermits(self, group, permits):
+    def setGroupRoles(self, group, roles):
         session = self.session()
-        session.query(GroupPermit).filter(
-            GroupPermit.group == group.name).delete()
-        for permit in set(permits):
-            if permit not in flask._permits:
+        session.query(GroupRole).filter(
+            GroupRole.group == group.name).delete()
+        for role in set(roles):
+            if role not in flask._roles:
                 continue
-            session.merge(GroupPermit(group.name, permit))
+            session.merge(GroupRole(group.name, role))
         session.commit()
 
-    def getGroupPermits(self, group):
+    def getGroupRoles(self, group):
         session = self.session()
-        q = session.query(GroupPermit.permit).filter(
-            GroupPermit.group == group.name)
+        q = session.query(GroupRole.role).filter(
+            GroupRole.group == group.name)
         results = set(i[0] for i in q.all())
         session.close()
         return results
 
-    def getUserPermits(self, user):
+    def getUserRoles(self, user):
         session = self.session()
-        q = session.query(GroupPermit.permit).join(Group,
-            GroupPermit.group == Group.name).filter(Group.name.in_(
+        q = session.query(GroupRole.role).join(Group,
+            GroupRole.group == Group.name).filter(Group.name.in_(
                 session.query(UserGroup.group).filter(
                     UserGroup.user == user.login)
                 ))

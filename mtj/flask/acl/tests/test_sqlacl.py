@@ -120,25 +120,25 @@ class AclTestCase(TestCase):
         auth.setUserGroups(admin_user, ('user', 'nimda'))
         self.assertEqual(filter_gn(auth.getUserGroups(admin_user)), ('user',))
 
-    def test_group_permit(self):
+    def test_group_roles(self):
         auth = self.auth
         auth.addGroup('nimda')
         group = auth.getGroup('nimda')
-        self.assertEqual(auth.getGroupPermits(group), set())
-        auth.setGroupPermits(group, ('admin',))
-        self.assertEqual(auth.getGroupPermits(group), {'admin',})
+        self.assertEqual(auth.getGroupRoles(group), set())
+        auth.setGroupRoles(group, ('admin',))
+        self.assertEqual(auth.getGroupRoles(group), {'admin',})
 
-        auth.setGroupPermits(group, ('admin', 'test'))
-        self.assertEqual(auth.getGroupPermits(group), {'admin',})
+        auth.setGroupRoles(group, ('admin', 'test'))
+        self.assertEqual(auth.getGroupRoles(group), {'admin',})
 
-        flask._permits.add('__test')
-        auth.setGroupPermits(group, ('admin', '__test'))
-        self.assertEqual(auth.getGroupPermits(group), {'admin', '__test'})
-        flask._permits.remove('__test')
+        flask._roles.add('__test')
+        auth.setGroupRoles(group, ('admin', '__test'))
+        self.assertEqual(auth.getGroupRoles(group), {'admin', '__test'})
+        flask._roles.remove('__test')
 
-    def test_user_permit(self):
-        flask._permits.add('__test1')
-        flask._permits.add('__test2')
+    def test_user_roles(self):
+        flask._roles.add('__test1')
+        flask._roles.add('__test2')
 
         auth = self.auth
         auth.addGroup('user')
@@ -152,31 +152,31 @@ class AclTestCase(TestCase):
         user2 = auth.getUser('user2')
 
         # null case
-        self.assertEqual(auth.getUserPermits(user1), set())
+        self.assertEqual(auth.getUserRoles(user1), set())
 
-        auth.setGroupPermits(group_user, ('__test1', '__test2'))
-        auth.setGroupPermits(group_nimda, ('admin', '__test2'))
+        auth.setGroupRoles(group_user, ('__test1', '__test2'))
+        auth.setGroupRoles(group_nimda, ('admin', '__test2'))
 
         auth.setUserGroups(user1, ('user',))
-        self.assertEqual(auth.getUserPermits(user1), {'__test1', '__test2'})
+        self.assertEqual(auth.getUserRoles(user1), {'__test1', '__test2'})
 
         auth.setUserGroups(user2, ('nimda',))
-        self.assertEqual(auth.getUserPermits(user2), {'admin', '__test2'})
+        self.assertEqual(auth.getUserRoles(user2), {'admin', '__test2'})
 
         auth.setUserGroups(user1, ('user', 'nimda',))
-        self.assertEqual(auth.getUserPermits(user1),
+        self.assertEqual(auth.getUserRoles(user1),
             {'admin', '__test1', '__test2'})
 
-        auth.setGroupPermits(group_user, ('__test2',))
-        self.assertEqual(auth.getUserPermits(user1), {'admin', '__test2'})
-        self.assertEqual(auth.getUserPermits(user2), {'admin', '__test2'})
+        auth.setGroupRoles(group_user, ('__test2',))
+        self.assertEqual(auth.getUserRoles(user1), {'admin', '__test2'})
+        self.assertEqual(auth.getUserRoles(user2), {'admin', '__test2'})
 
-        auth.setGroupPermits(group_nimda, ())
-        self.assertEqual(auth.getUserPermits(user1), {'__test2'})
-        self.assertEqual(auth.getUserPermits(user2), set())
+        auth.setGroupRoles(group_nimda, ())
+        self.assertEqual(auth.getUserRoles(user1), {'__test2'})
+        self.assertEqual(auth.getUserRoles(user2), set())
 
-        flask._permits.remove('__test1')
-        flask._permits.remove('__test2')
+        flask._roles.remove('__test1')
+        flask._roles.remove('__test2')
 
     def test_setup_login(self):
         auth = sql.SqlAcl(setup_login='admin')
@@ -184,7 +184,7 @@ class AclTestCase(TestCase):
         auth = sql.SqlAcl(setup_login='admin', setup_password='password')
         self.assertEqual(auth.getUser('admin').login, 'admin')
         self.assertTrue(auth.authenticate('admin', 'password'))
-        # XXX verify that the admin permit is set correctly.
+        # XXX verify that the admin role is set correctly.
 
         admin_grp = auth.getGroup('admin')
         self.assertEqual(admin_grp.name,
@@ -398,9 +398,9 @@ class UserSqlAclIntegrationTestCase(TestCase):
             rv = c.post('/acl/group/add', data={'name': 'test'})
             self.assertTrue('already exists.' in rv.data)
 
-    def test_group_permit(self):
-        flask._permits.add('__test1')
-        flask._permits.add('__test2')
+    def test_group_roles(self):
+        flask._roles.add('__test1')
+        flask._roles.add('__test2')
 
         auth = self.auth
         auth.addGroup('test_group')
@@ -409,31 +409,31 @@ class UserSqlAclIntegrationTestCase(TestCase):
         with self.client as c:
             rv = c.get('/acl/group/edit/test_group')
             self.assertTrue('value="test_group"' in rv.data)
-            self.assertTrue('name="permit" value="__test1"' in rv.data)
-            self.assertTrue('name="permit" value="__test2"' in rv.data)
+            self.assertTrue('name="role" value="__test1"' in rv.data)
+            self.assertTrue('name="role" value="__test2"' in rv.data)
 
             # single group assignment
             rv = c.post('/acl/group/edit/test_group', data={
                 'description': 'Test',
-                'permit': ['__test2'],
+                'role': ['__test2'],
             })
             rv = c.get('/acl/group/edit/test_group')
             self.assertEqual(auth.getGroup('test_group').description, 'Test')
-            self.assertTrue('name="permit" value="__test2" checked="checked"'
+            self.assertTrue('name="role" value="__test2" checked="checked"'
                 in rv.data)
 
             # non-existent group assignments
             rv = c.post('/acl/group/edit/test_group', data={
-                'permit': ['__test1', 'nimda'],
+                'role': ['__test1', 'nimda'],
             })
-            self.assertEqual(auth.getGroupPermits(test_group), {'__test1'})
+            self.assertEqual(auth.getGroupRoles(test_group), {'__test1'})
 
             # Finally test that a missing group will 404.
             rv = c.get('/acl/group/edit/no_group')
             self.assertTrue('<h1>Not Found</h1>' in rv.data)
 
-        flask._permits.remove('__test1')
-        flask._permits.remove('__test2')
+        flask._roles.remove('__test1')
+        flask._roles.remove('__test2')
 
     def test_group_list(self):
         auth = self.auth
