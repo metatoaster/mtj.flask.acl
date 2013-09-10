@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from mtj.flask.acl import BaseAcl
+from mtj.flask.acl.base import BaseAcl
 from mtj.flask.acl import flask
 
 Base = declarative_base()

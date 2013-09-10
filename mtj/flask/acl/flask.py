@@ -4,7 +4,7 @@ import functools
 
 from flask import abort, current_app, session, request
 
-from . import anonymous
+from .base import anonymous
 
 # Flask helpers.
 

@@ -3,8 +3,7 @@ from __future__ import absolute_import
 from flask import Blueprint, Flask, request, g, make_response, render_template
 from flask import abort, flash, url_for, current_app, session, redirect
 
-# TODO we should move this whole thing into a separate module.
-from mtj.flask.acl import anonymous
+from mtj.flask.acl.base import anonymous
 from mtj.flask.acl.exc import SiteAclMissingError
 from mtj.flask.acl.flask import *
 

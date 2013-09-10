@@ -7,7 +7,7 @@ from flask import abort, flash, url_for, current_app, session, redirect
 from flask import Markup
 
 # TODO we should move this whole thing into a separate module.
-from mtj.flask.acl import anonymous
+from mtj.flask.acl.base import anonymous
 
 from mtj.flask.acl import endpoint
 from mtj.flask.acl.flask import *
@@ -30,6 +30,9 @@ def make_acl_front(name='acl_front', import_name='mtj.flask.acl',
             response = make_response(result)
             return response
         return wrapper
+
+    # XXX the following can probably be replaced with a dictionary and
+    # some sort of constructer.
 
     @acl_front.route('/login', methods=['GET', 'POST'])
     @render_with_layout

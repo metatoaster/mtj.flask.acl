@@ -5,8 +5,8 @@ import tempfile
 from flask import Flask, session
 from werkzeug.exceptions import Forbidden
 
-from mtj.flask.acl import SetupAcl
-from mtj.flask.acl import anonymous
+from mtj.flask.acl.base import SetupAcl
+from mtj.flask.acl.base import anonymous
 
 from mtj.flask.acl import flask
 from mtj.flask.acl import user

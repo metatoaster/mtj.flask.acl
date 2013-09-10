@@ -1,5 +1,5 @@
 from unittest import TestCase, TestSuite, makeSuite
-from mtj.flask.acl import SetupAcl
+from mtj.flask.acl.base import SetupAcl
 
 
 class AclTestCase(TestCase):
