@@ -124,10 +124,9 @@ class BaseAcl(object):
         self.principal = Principal(app, *a, **kw)
         app.config['MTJ_ACL'] = self
 
-        # TODO figure out how to do lazy loading.
         @identity_loaded.connect_via(app)
         def on_identity_loaded(sender, identity):
-            # XXX the identity is actually the raw token
+            # the identity is actually the raw token
             access_token = identity.id
             if access_token is None:
                 user = anonymous
@@ -137,6 +136,7 @@ class BaseAcl(object):
             if user is anonymous:
                 return
             roles = self.getUserRoles(user)
+            # TODO figure out how to do lazy loading of roles.
             for role in roles:
                 identity.provides.add(RoleNeed(role))
 
