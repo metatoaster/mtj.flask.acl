@@ -13,10 +13,10 @@ from mtj.flask.acl import endpoint
 from mtj.flask.acl.flask import *
 
 
-def make_acl_front(name='acl_front', import_name='mtj.flask.acl',
-        layout='layout.html'):
+def make_acl_front(name='acl_front', import_name='mtj.flask.acl.user',
+        layout='layout.html', template_folder='templates'):
 
-    acl_front = Blueprint(name, import_name)
+    acl_front = Blueprint(name, import_name, template_folder=template_folder)
 
     def render_with_layout(f):
         # XXX trap exceptions here?
