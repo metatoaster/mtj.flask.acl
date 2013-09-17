@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from flask import Blueprint, Flask, request, g, make_response, render_template
+from flask import Blueprint, Flask, request, g, render_template
 from flask import abort, flash, url_for, current_app, session, redirect
 
 from flask.ext.principal import Permission, RoleNeed
@@ -61,9 +61,7 @@ change_password = permission_from_roles('admin', 'self_passwd')
 def user_list():
     acl_back = current_app.config.get('MTJ_ACL')
     users = acl_back.listUsers()
-    result = render_template('user_list.jinja', users=users)
-    response = make_response(result)
-    return response
+    return render_template('user_list.jinja', users=users)
 
 @manager_or_admin.require()
 def user_add():
@@ -80,9 +78,7 @@ def user_add():
             return redirect(url_for('.user_edit', user_login=login))
         flash('Failed to create user %s as it already exists.' % login)
 
-    result = render_template('user_add.jinja')
-    response = make_response(result)
-    return response
+    return render_template('user_add.jinja')
 
 @manager_or_admin.require()
 def user_edit(user_login):
@@ -100,9 +96,7 @@ def user_edit(user_login):
         flash('User updated')
         return redirect(url_for('.user_edit', user_login=user_login))
 
-    result = render_template('user_edit.jinja', user=user)
-    response = make_response(result)
-    return response
+    return render_template('user_edit.jinja', user=user)
 
 def change_password_form(user, admin_mode=False):
     acl_back = current_app.config.get('MTJ_ACL')
@@ -132,10 +126,8 @@ def change_password_form(user, admin_mode=False):
             else:
                 error_msg = 'Error updating password.'
 
-    result = render_template('user_passwd.jinja', user=user,
+    return render_template('user_passwd.jinja', user=user,
         admin_mode=admin_mode, error_msg=error_msg)
-    response = make_response(result)
-    return response
 
 @change_password.require()
 def passwd():
@@ -157,9 +149,7 @@ def passwd_admin(user_login):
 def group_list():
     acl_back = current_app.config.get('MTJ_ACL')
     groups = acl_back.listGroups()
-    result = render_template('group_list.jinja', groups=groups)
-    response = make_response(result)
-    return response
+    return render_template('group_list.jinja', groups=groups)
 
 @manager_or_admin.require()
 def group_user(user_login):
@@ -178,11 +168,9 @@ def group_user(user_login):
     all_groups = acl_back.listGroups()
     user_groups_names = [ug.name for ug in acl_back.getUserGroups(user)]
 
-    result = render_template('group_user.jinja', user=user,
+    return render_template('group_user.jinja', user=user,
         user_groups_names=user_groups_names, all_groups=all_groups,
         error_msg=error_msg)
-    response = make_response(result)
-    return response
 
 @manager_or_admin.require()
 def group_add():
@@ -202,9 +190,7 @@ def group_add():
             flash('Group added.')
             return redirect(url_for('.group_edit', group_name=name))
 
-    result = render_template('group_add.jinja', error_msg=error_msg)
-    response = make_response(result)
-    return response
+    return render_template('group_add.jinja', error_msg=error_msg)
 
 @manager_or_admin.require()
 def group_edit(group_name):
@@ -224,7 +210,5 @@ def group_edit(group_name):
     group_roles = acl_back.getGroupRoles(group)
     roles = getRoles()
 
-    result = render_template('group_edit.jinja',
+    return render_template('group_edit.jinja',
         group=group, roles=roles, group_roles=group_roles)
-    response = make_response(result)
-    return response
