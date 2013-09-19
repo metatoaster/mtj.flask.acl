@@ -4,10 +4,11 @@ from flask import Blueprint, Flask, request, g, render_template
 from flask import abort, flash, url_for, current_app, session, redirect
 
 from flask.ext.principal import Permission, RoleNeed
-from flask.ext.principal import Identity, AnonymousIdentity, identity_changed
+from flask.ext.principal import AnonymousIdentity, identity_changed
 
 from mtj.flask.acl.base import anonymous
 from mtj.flask.acl.exc import SiteAclMissingError
+from mtj.flask.acl.principal import AclIdentity
 from mtj.flask.acl.flask import *
 
 def login():
@@ -22,12 +23,12 @@ def login():
     error = None
     login = request.form.get('login')
     password = request.form.get('password')
-    user = acl_back.authenticate(login, password)
+    access_token = acl_back.authenticate(login, password)
 
-    if user:
-        flash('Welcome %s' % user['login'])
+    if access_token:
+        flash('Welcome %s' % access_token['login'])
         identity_changed.send(current_app._get_current_object(),
-            identity=Identity(user))
+            identity=AclIdentity(access_token))
         script_root = getattr(request, 'script_root', '')
         return redirect(script_root + request.form.get('next', ''))
     else:

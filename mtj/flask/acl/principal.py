@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from flask import abort
 from flask import g
+from flask import session
 
 from flask.ext.principal import PermissionDenied
 
@@ -14,15 +15,37 @@ from flask.ext.principal import Identity
 from .base import anonymous
 
 
-def init_app(acl, app, use_sessions=True, *a, **kw):
+class AclIdentity(Identity):
+
+    def __init__(self, access_token, auth_type=None):
+        super(AclIdentity, self).__init__(None, auth_type)
+        self.access_token = access_token
+
+
+def acl_session_identity_loader():
+    if 'mtj.access_token' in session and 'identity.auth_type' in session:
+        identity = AclIdentity(session['mtj.access_token'],
+                            session['identity.auth_type'])
+        return identity
+
+def acl_session_identity_saver(identity):
+    if isinstance(identity, AclIdentity):
+        session['mtj.access_token'] = identity.access_token
+        session.modified = True
+
+def init_app(acl, app, mtjacl_sessions=True, *a, **kw):
 
     # Not using the default session.
-    principal = Principal(app, use_sessions, *a, **kw)
+    principal = Principal(app, *a, **kw)
 
     @identity_loaded.connect_via(app)
     def on_identity_loaded(sender, identity):
+        if not isinstance(identity, AclIdentity):
+            # Not doing anything on identities we don't care for.
+            return
+
         # the identity is actually the raw token
-        access_token = identity.id
+        access_token = identity.access_token
         if access_token is None:
             user = anonymous
         else:
@@ -34,5 +57,11 @@ def init_app(acl, app, use_sessions=True, *a, **kw):
         # TODO figure out how to do lazy loading of roles.
         for role in roles:
             identity.provides.add(RoleNeed(role))
+
+        identity.id = user.login
+
+    if mtjacl_sessions:
+        principal.identity_loader(acl_session_identity_loader)
+        principal.identity_saver(acl_session_identity_saver)
 
     app.config['MTJ_ACL'] = acl
