@@ -102,44 +102,13 @@ class BaseAcl(object):
 
         self.init_app(app)
 
-    def init_app(self, app, *a, **kw):
+    def init_app(self, app, use_sessions=True, *a, **kw):
         """
-        Arguments:
-
-        app
-            - the application object to apply this plugin
-
-        remaining arguments are passed to constructor for Principal.
+        refer to flask_principal.Principal.init_app for arguments.
         """
 
-        from flask import abort
-        from flask import g
-
-        from flask.ext.principal import PermissionDenied
-
-        from flask.ext.principal import Principal
-        from flask.ext.principal import RoleNeed
-        from flask.ext.principal import identity_loaded
-
-        self.principal = Principal(app, *a, **kw)
-        app.config['MTJ_ACL'] = self
-
-        @identity_loaded.connect_via(app)
-        def on_identity_loaded(sender, identity):
-            # the identity is actually the raw token
-            access_token = identity.id
-            if access_token is None:
-                user = anonymous
-            else:
-                user = self.getUserFromAccessToken(access_token)
-            g.mtj_user = user
-            if user is anonymous:
-                return
-            roles = self.getUserRoles(user)
-            # TODO figure out how to do lazy loading of roles.
-            for role in roles:
-                identity.provides.add(RoleNeed(role))
-
+        from .principal import init_app
+        result = init_app(self, app, use_sessions, *a, **kw)
         return self
 
 
