@@ -1,5 +1,8 @@
 from __future__ import absolute_import
 
+from werkzeug.exceptions import HTTPException
+
+from flask import current_app
 from flask import abort
 from flask import g
 from flask import session
@@ -65,3 +68,16 @@ def init_app(acl, app, mtjacl_sessions=True, *a, **kw):
         principal.identity_saver(acl_session_identity_saver)
 
     app.config['MTJ_ACL'] = acl
+    @app.errorhandler(PermissionDenied)
+    def permission_denied(error):
+        if g.identity and g.identity.id is not None:
+            code = 403
+        else:
+            code = 401
+
+        # XXX since the custom exception error handler is done after the
+        # default http ones, we work around this limitation.
+        try:
+            abort(code)
+        except HTTPException as e:
+            return current_app.handle_http_exception(e)
