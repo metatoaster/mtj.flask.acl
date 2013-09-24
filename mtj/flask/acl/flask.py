@@ -51,4 +51,6 @@ def verifyBlueprintRole():
         verifyUserRole(blueprint_role)
 
 def permission_from_roles(*roles):
+    # XXX make this (rather, register_role) workable from within an app
+    # context so that they get registered to just that app.
     return Permission(*[register_role(role) for role in roles])
