@@ -39,7 +39,7 @@ def acl_session_identity_saver(identity):
 def init_app(acl, app, mtjacl_sessions=True, *a, **kw):
 
     # Not using the default session.
-    principal = Principal(app, *a, **kw)
+    principal = Principal(app, use_sessions=False, *a, **kw)
 
     @identity_loaded.connect_via(app)
     def on_identity_loaded(sender, identity):

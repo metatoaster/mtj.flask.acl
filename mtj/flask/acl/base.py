@@ -95,12 +95,12 @@ class BaseAcl(object):
     def updatePassword(self, login, password):
         return False
 
-    def __call__(self, app):
+    def __call__(self, app, *a, **kw):
         """
         Hook this ACL with the app
         """
 
-        self.init_app(app)
+        self.init_app(app, *a, **kw)
 
     def init_app(self, app, use_sessions=True, *a, **kw):
         """
