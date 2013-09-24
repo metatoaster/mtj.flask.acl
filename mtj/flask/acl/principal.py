@@ -36,7 +36,21 @@ def acl_session_identity_saver(identity):
         session['mtj.access_token'] = identity.access_token
         session.modified = True
 
-def init_app(acl, app, mtjacl_sessions=True, *a, **kw):
+def handle_permission_denied(error):
+    if g.identity and g.identity.id is not None:
+        code = 403
+    else:
+        code = 401
+
+    # XXX since the custom exception error handler is done after the
+    # default http ones, we work around this limitation.
+    try:
+        abort(code)
+    except HTTPException as e:
+        return current_app.handle_http_exception(e)
+
+def init_app(acl, app, mtjacl_sessions=True,
+        permission_denied_handler=handle_permission_denied, *a, **kw):
 
     # Not using the default session.
     principal = Principal(app, use_sessions=False, *a, **kw)
@@ -68,16 +82,4 @@ def init_app(acl, app, mtjacl_sessions=True, *a, **kw):
         principal.identity_saver(acl_session_identity_saver)
 
     app.config['MTJ_ACL'] = acl
-    @app.errorhandler(PermissionDenied)
-    def permission_denied(error):
-        if g.identity and g.identity.id is not None:
-            code = 403
-        else:
-            code = 401
-
-        # XXX since the custom exception error handler is done after the
-        # default http ones, we work around this limitation.
-        try:
-            abort(code)
-        except HTTPException as e:
-            return current_app.handle_http_exception(e)
+    app.errorhandler(PermissionDenied)(permission_denied_handler)
