@@ -204,7 +204,7 @@ class UserSqlAclIntegrationTestCase(TestCase):
         self.auth = sql.SqlAcl(setup_login='admin', setup_password='password')
 
         app = Flask('mtj.flask.acl')
-        auth = self.auth(app)
+        auth = self.auth(app, permission_denied_handler=None)
 
         app.config['SECRET_KEY'] = 'test_secret_key'
         app.register_blueprint(user.acl_front, url_prefix='/acl')

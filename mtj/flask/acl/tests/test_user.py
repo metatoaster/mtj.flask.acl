@@ -20,7 +20,7 @@ class UserTestCase(unittest.TestCase):
 
         app = Flask('mtj.flask.acl')
         app.config['SECRET_KEY'] = 'test_secret_key'
-        auth = self.auth(app)
+        auth = self.auth(app, permission_denied_handler=None)
 
         app.register_blueprint(user.acl_front, url_prefix='/acl')
 

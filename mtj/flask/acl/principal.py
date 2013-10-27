@@ -83,4 +83,5 @@ def init_app(acl, app, mtjacl_sessions=True,
         principal.identity_saver(acl_session_identity_saver)
 
     app.config['MTJ_ACL'] = acl
-    app.errorhandler(PermissionDenied)(permission_denied_handler)
+    if callable(permission_denied_handler):
+        app.errorhandler(PermissionDenied)(permission_denied_handler)
