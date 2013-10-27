@@ -34,6 +34,7 @@ def acl_session_identity_loader():
 def acl_session_identity_saver(identity):
     if isinstance(identity, AclIdentity):
         session['mtj.access_token'] = identity.access_token
+        session['identity.auth_type'] = identity.auth_type
         session.modified = True
 
 def handle_permission_denied(error):
