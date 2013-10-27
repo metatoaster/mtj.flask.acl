@@ -11,7 +11,7 @@ _roles = set()
 _blueprint_roles = {}
 
 def getCurrentUser():
-    return g.mtj_user
+    return g.get('mtj_user', anonymous)
 
 def getCurrentUserGroupNames():
     user = getCurrentUser()
