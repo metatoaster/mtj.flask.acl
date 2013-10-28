@@ -42,6 +42,8 @@ def logout():
     if getCurrentUser() not in (None, anonymous):
         identity_changed.send(current_app._get_current_object(),
             identity=AnonymousIdentity())
+        # gotta clear the cache
+        g.mtj_user = None
         # cripes bad way to display a message while ensuring the nav
         # elements for logged in users are not displayed.
         return redirect(url_for('.logout'))

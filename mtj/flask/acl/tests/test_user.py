@@ -96,6 +96,8 @@ class UserTestCase(unittest.TestCase):
             self.assertTrue('<a href="list">' in rv.data)
 
             rv = c.post('/acl/logout')
+            self.assertTrue(flask.getCurrentUser() in (None, anonymous))
+
             rv = c.post('/acl/login',
                 data={'login': 'user', 'password': 'password'})
             rv = c.get('/acl/current')

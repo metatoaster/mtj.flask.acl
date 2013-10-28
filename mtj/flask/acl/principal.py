@@ -68,6 +68,7 @@ def init_app(acl, app, mtjacl_sessions=True,
             user = anonymous
         else:
             user = acl.getUserFromAccessToken(access_token)
+        # cache this value.
         g.mtj_user = user
         if user is anonymous:
             return
