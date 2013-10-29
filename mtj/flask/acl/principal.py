@@ -14,6 +14,7 @@ from flask.ext.principal import RoleNeed
 from flask.ext.principal import identity_loaded
 
 from flask.ext.principal import Identity
+from flask.ext.principal import AnonymousIdentity
 
 from .base import anonymous
 
@@ -21,8 +22,14 @@ from .base import anonymous
 class AclIdentity(Identity):
 
     def __init__(self, access_token, auth_type=None):
-        super(AclIdentity, self).__init__(None, auth_type)
+        Identity.__init__(self, None, auth_type)
         self.access_token = access_token
+
+
+class AclAnonymousIdentity(AclIdentity, AnonymousIdentity):
+
+    def __init__(self, access_token=None, auth_type=None):
+        AclIdentity.__init__(self, None, auth_type)
 
 
 def acl_session_identity_loader():

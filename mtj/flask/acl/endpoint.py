@@ -4,11 +4,11 @@ from flask import Blueprint, Flask, request, g, render_template
 from flask import abort, flash, url_for, current_app, session, redirect
 
 from flask.ext.principal import Permission, RoleNeed
-from flask.ext.principal import AnonymousIdentity, identity_changed
+from flask.ext.principal import identity_changed
 
 from mtj.flask.acl.base import anonymous
 from mtj.flask.acl.exc import SiteAclMissingError
-from mtj.flask.acl.principal import AclIdentity
+from mtj.flask.acl.principal import AclIdentity, AclAnonymousIdentity
 from mtj.flask.acl.flask import *
 
 def login():
@@ -41,9 +41,7 @@ def login():
 def logout():
     if getCurrentUser() not in (None, anonymous):
         identity_changed.send(current_app._get_current_object(),
-            identity=AnonymousIdentity())
-        # gotta clear the cache
-        g.mtj_user = None
+            identity=AclAnonymousIdentity())
         # cripes bad way to display a message while ensuring the nav
         # elements for logged in users are not displayed.
         return redirect(url_for('.logout'))
