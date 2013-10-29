@@ -6,6 +6,7 @@ from flask import current_app
 from flask import abort
 from flask import g
 from flask import session
+from flask import request
 
 from flask.ext.principal import PermissionDenied
 
@@ -93,3 +94,19 @@ def init_app(acl, app, mtjacl_sessions=True,
     app.config['MTJ_ACL'] = acl
     if callable(permission_denied_handler):
         app.errorhandler(PermissionDenied)(permission_denied_handler)
+
+    app.before_request(_on_before_request(acl))
+
+def _on_before_request(acl):
+    def on_before_request():
+        if g.get('mtj_user') in (anonymous, None):
+            g.acl_items = [
+                ('log in', acl.prefix + '/login'),
+            ]
+        else:
+            g.acl_items = [
+                (g.mtj_user.login, acl.prefix + '/current'),
+                ('log out', acl.prefix + '/logout'),
+            ]
+
+    return on_before_request

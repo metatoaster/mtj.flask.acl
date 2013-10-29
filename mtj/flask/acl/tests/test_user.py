@@ -2,7 +2,7 @@ import os
 import unittest
 import tempfile
 
-from flask import Flask, session
+from flask import Flask, session, g
 from flask.ext.principal import PermissionDenied
 from werkzeug.exceptions import Forbidden
 
@@ -26,6 +26,11 @@ class UserTestCase(unittest.TestCase):
 
         app.config['TESTING'] = True
         self.app = app
+
+        @app.route('/acl_items')
+        def acl_items():
+            return '\n'.join(['<a href="%s">%s</a>' % (href, label)
+                for label, href in g.acl_items])
 
     def tearDown(self):
         pass
@@ -86,6 +91,27 @@ class UserTestCase(unittest.TestCase):
                 data={'login': 'admin', 'password': 'password'})
             rv = c.get('/acl/list')
             self.assertTrue('<td>admin</td>' in rv.data)
+
+    def test_acl_items(self):
+        with self.app.test_client() as c:
+            rv = c.get('/acl_items')
+            self.assertEqual(rv.data.splitlines(), [
+                '<a href="/acl/login">log in</a>',
+            ])
+
+            rv = c.post('/acl/login',
+                data={'login': 'admin', 'password': 'password'})
+            rv = c.get('/acl_items')
+            self.assertEqual(rv.data.splitlines(), [
+                '<a href="/acl/current">admin</a>',
+                '<a href="/acl/logout">log out</a>',
+            ])
+
+            rv = c.post('/acl/logout')
+            rv = c.get('/acl_items')
+            self.assertEqual(rv.data.splitlines(), [
+                '<a href="/acl/login">log in</a>',
+            ])
 
     def test_current_user_options(self):
         with self.app.test_client() as c:

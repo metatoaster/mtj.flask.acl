@@ -39,8 +39,10 @@ class BaseGroup(object):
 
 class BaseAcl(object):
 
-    def __init__(self, *a, **kw):
+    def __init__(self, prefix='/acl', *a, **kw):
         self._tbl_access_tokens = {}
+
+        self.prefix = prefix
 
     def authenticate(self, login, password):
         if self.validate(login, password):
