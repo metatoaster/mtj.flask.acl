@@ -25,6 +25,14 @@ class AclIdentity(Identity):
         self.access_token = access_token
 
 
+class AnonymousIdentity(AclIdentity):
+
+    def __init__(self, access_token=None, auth_type=None):
+        super(AclIdentity, self).__init__(None, auth_type)
+        # accept the argument, but it always default to None.
+        self.access_token = None
+
+
 def acl_session_identity_loader():
     if 'mtj.access_token' in session and 'identity.auth_type' in session:
         identity = AclIdentity(session['mtj.access_token'],

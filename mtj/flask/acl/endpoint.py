@@ -4,11 +4,11 @@ from flask import Blueprint, Flask, request, g, render_template
 from flask import abort, flash, url_for, current_app, session, redirect
 
 from flask.ext.principal import Permission, RoleNeed
-from flask.ext.principal import AnonymousIdentity, identity_changed
+from flask.ext.principal import identity_changed
 
 from mtj.flask.acl.base import anonymous
 from mtj.flask.acl.exc import SiteAclMissingError
-from mtj.flask.acl.principal import AclIdentity
+from mtj.flask.acl.principal import AclIdentity, AnonymousIdentity
 from mtj.flask.acl.flask import *
 
 def login():
