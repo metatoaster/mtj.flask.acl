@@ -31,6 +31,7 @@ class AclAnonymousIdentity(AclIdentity, AnonymousIdentity):
 
     def __init__(self, access_token=None, auth_type=None):
         AclIdentity.__init__(self, None, auth_type)
+        self.access_token = None
 
 
 def acl_session_identity_loader():

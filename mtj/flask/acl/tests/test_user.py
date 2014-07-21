@@ -113,6 +113,19 @@ class UserTestCase(unittest.TestCase):
                 '<a href="/acl/login">log in</a>',
             ])
 
+    def test_user_logout(self):
+        with self.app.test_client() as c:
+            rv = c.post('/acl/login',
+                data={'login': 'admin', 'password': 'password'})
+            rv = c.get('/acl/current')
+            self.assertTrue('<a href="add">' in rv.data)
+            self.assertTrue('<a href="list">' in rv.data)
+            rv = c.post('/acl/logout')
+
+            rv = c.get('/acl/current')
+            self.assertFalse('<a href="add">' in rv.data)
+            self.assertFalse('<a href="list">' in rv.data)
+
     def test_current_user_options(self):
         with self.app.test_client() as c:
             rv = c.post('/acl/login',
